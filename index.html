@@ -3,7 +3,7 @@ calendar<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atmosphere Weather</title>
+    <title>252425 Wetter</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -22,20 +22,26 @@ calendar<!DOCTYPE html>
                     <i data-lucide="cloud"></i>
                 </div>
                 <div>
-                    <h1>Atmosphere</h1>
-                    <p>Live Satellite Data</p>
+                    <h1>252425 Wetter</h1>
+                    <p>Live Wetterdaten</p>
                 </div>
             </div>
-            <form id="search-form" class="search-form">
-                <i data-lucide="search" class="search-icon"></i>
-                <input type="text" id="search-input" placeholder="Stadt suchen..." value="Zürich">
-            </form>
+            <div class="search-actions">
+                <form id="search-form" class="search-form">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Stadt suchen..." value="Zürich">
+                </form>
+                <button type="button" id="geo-button" class="geo-button">
+                    <i data-lucide="navigation"></i>
+                    <span>Mein Standort</span>
+                </button>
+            </div>
         </header>
 
         <main id="main-content" class="hidden">
             <!-- Main Weather Info -->
             <div class="main-grid">
-                <div class="main-column-left">
+                <div class="main-column-cities">
                     <div id="main-card" class="card glowing">
                         <div class="location-badge">
                             <i data-lucide="map-pin"></i>
@@ -43,6 +49,7 @@ calendar<!DOCTYPE html>
                         </div>
                         <div class="temp-display">
                             <span id="current-temp">--°</span>
+                            <div id="hero-weather-icon" class="hero-weather-icon"></div>
                             <div class="condition">
                                 <div id="main-weather-icon"></div>
                                 <span id="condition-label">--</span>
@@ -58,7 +65,25 @@ calendar<!DOCTYPE html>
                                 <div><i data-lucide="arrow-down-right" class="text-cyan"></i> <span id="temp-min">--°</span></div>
                             </div>
                         </div>
+                        <div class="insight-inline">
+                            <div class="insight-title">
+                                <i data-lucide="info"></i>
+                                <span>Tageshinweis</span>
+                            </div>
+                            <p id="insight-text" class="insight-text">--</p>
+                        </div>
                     </div>
+                    <div class="card cities-card">
+                        <div class="card-header">
+                            <div class="card-title"><i data-lucide="navigation"></i> Bekannte Städte</div>
+                        </div>
+                        <div id="cities-list" class="cities-list">
+                            <!-- City tiles will be injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="main-column-left">
                     <div class="mini-stats-grid">
                         <div class="mini-stat">
                             <i data-lucide="wind"></i>
@@ -145,11 +170,19 @@ calendar<!DOCTYPE html>
                             </div>
                         </div>
                     </div>
+                    <div class="card">
+                         <div class="card-header">
+                            <div class="card-title"><i data-lucide="calendar"></i> 7-Tage Trend</div>
+                        </div>
+                        <div id="forecast-list" class="forecast-list">
+                            <!-- Daily forecast items will be injected here -->
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Charts and Forecasts -->
                 <div class="main-column-right">
-                    <div class="card">
+                    <div class="card chart-card main-chart-card">
                         <div class="card-header">
                             <div class="card-title"><i data-lucide="activity"></i> Temperaturverlauf & Niederschlag</div>
                             <div class="chart-legend">
@@ -159,20 +192,24 @@ calendar<!DOCTYPE html>
                         </div>
                         <div id="weather-chart-container"></div>
                     </div>
-                    <div class="details-grid">
-                        <div class="card">
-                             <div class="card-header">
-                                <div class="card-title"><i data-lucide="calendar"></i> 7-Tage Trend</div>
-                            </div>
-                            <div id="forecast-list" class="forecast-list">
-                                <!-- Daily forecast items will be injected here -->
-                            </div>
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <div class="card-title"><i data-lucide="umbrella"></i> Regenwahrscheinlichkeit (nächste 12h)</div>
                         </div>
-                        <div class="card daylight-card">
-                             <div class="card-header">
-                                <div class="card-title"><i data-lucide="sun"></i> Tageslicht</div>
-                            </div>
-                            <div class="astro-card">
+                        <div id="precip-chart-container"></div>
+                    </div>
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <div class="card-title"><i data-lucide="sun-medium"></i> UV-Index Verlauf</div>
+                        </div>
+                        <div id="uv-chart-container"></div>
+                    </div>
+                    <div class="details-grid">
+                <div class="card daylight-card">
+                     <div class="card-header">
+                        <div class="card-title"><i data-lucide="sun"></i> Tageslicht</div>
+                    </div>
+                    <div class="astro-card">
                                  <div class="astro-item">
                                     <div class="astro-icon sun"><i data-lucide="sunrise"></i></div>
                                     <span id="sunrise-time">--:--</span>

@@ -112,6 +112,16 @@ p {
     width: 100%;
     max-width: 400px;
 }
+.search-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 650px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
 .search-icon {
     position: absolute;
     left: 1rem;
@@ -141,15 +151,48 @@ p {
     background-color: rgba(30, 41, 59, 0.5);
     border-color: rgba(59, 130, 246, 0.3);
 }
+.geo-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(90deg, #2563eb, #0ea5e9);
+    color: white;
+    border: none;
+    border-radius: 9999px;
+    padding: 0.85rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    box-shadow: 0 10px 25px -10px rgba(59, 130, 246, 0.5);
+}
+.geo-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 15px 30px -12px rgba(59, 130, 246, 0.6);
+}
+.geo-button:active {
+    transform: translateY(0);
+}
+.geo-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+.geo-button svg {
+    width: 1rem;
+    height: 1rem;
+}
 
 /* --- Grid System --- */
 .main-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1.75rem;
 }
-.main-column-left { display: flex; flex-direction: column; gap: 1.5rem; }
-.main-column-right { display: flex; flex-direction: column; gap: 1.5rem; }
+.main-column-cities { display: flex; flex-direction: column; gap: 1.5rem; align-self: flex-start; }
+.main-column-left { display: flex; flex-direction: column; gap: 1.5rem; align-self: flex-start; }
+.main-column-right { display: grid; grid-template-columns: 1fr; gap: 1.5rem; align-self: flex-start; }
 
 .mini-stats-grid {
     display: grid;
@@ -162,6 +205,84 @@ p {
     grid-template-columns: 1fr;
     gap: 1.5rem;
     flex: 1;
+}
+
+.cities-card {
+    border: 1px solid var(--card-border-color);
+}
+.cities-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+}
+.city-tile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.75rem 0.9rem;
+    border-radius: 0.9rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--card-border-color);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+}
+.city-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+.city-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+.city-meta {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+.city-temp {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+}
+.city-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+}
+
+.insight-inline {
+    margin-top: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 0.9rem;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--card-border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+.insight-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.insight-title .lucide { width: 1rem; height: 1rem; }
+.insight-text {
+    margin: 0;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.chart-card {
+    width: 100%;
+    min-height: 150px;
+}
+.chart-card > div {
+    height: 100%;
 }
 
 /* --- Card Component --- */
@@ -203,6 +324,37 @@ p {
 
 /* --- Main Weather Card --- */
 #main-card { min-height: unset; display: flex; flex-direction: column; gap: 1.5rem; padding: 1.75rem;}
+.temp-display {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+}
+.hero-weather-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.95;
+}
+.hero-weather-icon svg {
+    width: 64px;
+    height: 64px;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.25));
+}
+
+#weather-chart-container {
+    min-height: 200px;
+    max-height: 240px;
+    overflow: hidden;
+}
+#precip-chart-container,
+#uv-chart-container {
+    min-height: 140px;
+    max-height: 180px;
+    overflow: hidden;
+}
 .location-badge {
     display: inline-flex;
     align-items: center;
@@ -353,8 +505,19 @@ p {
 @media (min-width: 768px) {
     body { padding: 2rem; }
     .header { flex-direction: row; }
-    .main-grid { grid-template-columns: repeat(12, 1fr); }
-    .main-column-left { grid-column: span 4 / span 4; }
-    .main-column-right { grid-column: span 8 / span 8; }
+    .main-grid { grid-template-columns: 260px 1fr; }
+    .main-column-cities { grid-column: 1; }
+    .main-column-left { grid-column: 2; }
+    .main-column-right { grid-column: 2; }
     .details-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1100px) {
+    .main-grid {
+        grid-template-columns: 280px 1.05fr 1.1fr;
+        align-items: start;
+    }
+    .main-column-cities { grid-column: 1; }
+    .main-column-left { grid-column: 2; }
+    .main-column-right { grid-column: 3; grid-template-columns: 1fr; }
 }

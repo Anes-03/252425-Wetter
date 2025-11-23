@@ -1,4 +1,4 @@
-# 252425-Wetter
+# 252425 Wetter
 
 Modernes, rein statisches Wetter-Dashboard auf Basis der Open‑Meteo APIs. Zeigt aktuelle Bedingungen, 7‑Tage‑Trend, stündliche Grafik, Luftqualität und astronomische Daten für beliebige Städte in deutscher Sprache.
 
@@ -7,11 +7,14 @@ Modernes, rein statisches Wetter-Dashboard auf Basis der Open‑Meteo APIs. Zeig
 
 ## Features
 - Städtensuche mit sofortigem Laden der Daten
+- Standortabfrage via Button „Mein Standort“ (Browser-GPS, mit Zustimmung)
 - Aktuelle Werte: Temperatur, gefühlt, Luftfeuchte, Wind, Böen, Druck, Bewölkung, Sichtweite, UV-Index
 - Precip/Schnee-Badges und Luftqualitätswerte (EU AQI, PM2.5)
+- Zusätzliche Diagramme: Regenwahrscheinlichkeit (12h) und UV-Index-Verlauf
 - 7‑Tage‑Vorhersage mit Icons und Regen-/Schnee-Wahrscheinlichkeiten
 - Stündlicher Temperatur- und Niederschlagschart (nächste 24h)
 - Sonnenaufgang/-untergang mit Tag/Nacht-Hinweis
+- Kachel mit Schnellblick auf bekannte Städte
 - Freundliche Fehleranzeige und Ladezustand
 
 ## Nutzung

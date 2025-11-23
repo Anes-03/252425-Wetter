@@ -24,6 +24,7 @@ window.onerror = function(message, source, lineno, colno, error) {
 // --- DOM Element References ---
 const searchForm = document.getElementById('search-form');
 const searchInput = document.getElementById('search-input');
+const geoButton = document.getElementById('geo-button');
 const mainContent = document.getElementById('main-content');
 const loader = document.getElementById('loader');
 const errorMessage = document.getElementById('error-message');
@@ -31,9 +32,11 @@ const errorMessage = document.getElementById('error-message');
 const locationEl = document.getElementById('location');
 const currentTempEl = document.getElementById('current-temp');
 const mainWeatherIconEl = document.getElementById('main-weather-icon');
+const heroWeatherIconEl = document.getElementById('hero-weather-icon');
 const conditionLabelEl = document.getElementById('condition-label');
 const tempMaxEl = document.getElementById('temp-max');
 const tempMinEl = document.getElementById('temp-min');
+const insightTextEl = document.getElementById('insight-text');
 
 const windSpeedEl = document.getElementById('wind-speed');
 const humidityEl = document.getElementById('humidity');
@@ -49,7 +52,10 @@ const aqiEuEl = document.getElementById('aqi-eu');
 const pm25El = document.getElementById('pm25');
 
 const weatherChartContainer = document.getElementById('weather-chart-container');
+const precipChartContainer = document.getElementById('precip-chart-container');
+const uvChartContainer = document.getElementById('uv-chart-container');
 const forecastList = document.getElementById('forecast-list');
+const citiesListEl = document.getElementById('cities-list');
 
 const sunriseTimeEl = document.getElementById('sunrise-time');
 const sunsetTimeEl = document.getElementById('sunset-time');
@@ -270,14 +276,141 @@ const createWeatherChart = (hourlyData) => {
 
 // --- Data Fetching & Transformation ---
 
-const fetchWeatherData = async (city) => {
+const createPrecipChart = (hourlyData) => {
+    if (!precipChartContainer) return;
+    precipChartContainer.innerHTML = '';
+    const data = (hourlyData || []).slice(0, 12);
+    if (data.length === 0) {
+        precipChartContainer.textContent = 'Keine Daten.';
+        return;
+    }
+    const maxVal = Math.max(...data.map((d) => d.precip || 0), 100);
+    const svgNS = "http://www.w3.org/2000/svg";
+    const width = 1000;
+    const height = 280;
+    const paddingX = 60;
+    const paddingY = 50;
+    const getX = (i) => paddingX + i * ((width - paddingX * 2) / data.length) + 10;
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    svg.style.width = "100%";
+    svg.style.height = "100%";
+
+    let bars = '';
+    data.forEach((d, i) => {
+        const barHeight = ((d.precip || 0) / maxVal) * (height - paddingY * 2);
+        const x = getX(i);
+        const y = height - paddingY - barHeight;
+        bars += `
+            <g>
+                <rect x="${x}" y="${paddingY}" width="32" height="${height - paddingY * 2}" fill="rgba(255,255,255,0.02)" rx="8"/>
+                <rect x="${x + 4}" y="${y}" width="24" height="${barHeight}" fill="#38bdf8" rx="6"/>
+                <text x="${x + 16}" y="${y - 8}" text-anchor="middle" style="fill:#e2e8f0; font-size:14px; font-weight:700;">${d.precip}%</text>
+                <text x="${x + 16}" y="${height - paddingY + 18}" text-anchor="middle" style="fill:#64748b; font-size:12px;">${d.time}</text>
+            </g>
+        `;
+    });
+    svg.innerHTML = bars;
+    precipChartContainer.appendChild(svg);
+};
+
+const createUvChart = (hourlyData) => {
+    if (!uvChartContainer) return;
+    uvChartContainer.innerHTML = '';
+    const data = (hourlyData || []).slice(0, 12);
+    if (data.length === 0) {
+        uvChartContainer.textContent = 'Keine Daten.';
+        return;
+    }
+    const maxVal = Math.max(...data.map((d) => d.uvIndex || 0), 1);
+    const svgNS = "http://www.w3.org/2000/svg";
+    const width = 1000;
+    const height = 280;
+    const paddingX = 60;
+    const paddingY = 50;
+    const getX = (i) => paddingX + i * ((width - paddingX * 2) / (data.length - 1 || 1));
+    const getY = (v) => height - paddingY - ((v || 0) / maxVal) * (height - paddingY * 2);
+    const points = data.map((d, i) => ({ x: getX(i), y: getY(d.uvIndex || 0), uv: d.uvIndex || 0, time: d.time }));
+
+    let path = '';
+    points.forEach((p, i) => {
+        if (i === 0) {
+            path += `M ${p.x} ${p.y}`;
+        } else {
+            path += ` L ${p.x} ${p.y}`;
+        }
+    });
+
+    const area = `${path} L ${points[points.length - 1].x} ${height - paddingY} L ${points[0].x} ${height - paddingY} Z`;
+
+    let dots = '';
+    points.forEach((p) => {
+        dots += `
+            <g>
+                <circle cx="${p.x}" cy="${p.y}" r="6" fill="#f8fafc" stroke="#fb923c" stroke-width="3" />
+                <text x="${p.x}" y="${p.y - 14}" text-anchor="middle" style="fill:#f1f5f9; font-size:13px; font-weight:700;">${p.uv}</text>
+                <text x="${p.x}" y="${height - paddingY + 18}" text-anchor="middle" style="fill:#64748b; font-size:12px;">${p.time}</text>
+            </g>
+        `;
+    });
+
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    svg.style.width = "100%";
+    svg.style.height = "100%";
+    svg.innerHTML = `
+        <defs>
+            <linearGradient id="uvArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#fb923c" stop-opacity="0.35" />
+                <stop offset="100%" stop-color="#fb923c" stop-opacity="0" />
+            </linearGradient>
+        </defs>
+        <path d="${area}" fill="url(#uvArea)" stroke="none" />
+        <path d="${path}" fill="none" stroke="#fb923c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+        ${dots}
+    `;
+    uvChartContainer.appendChild(svg);
+};
+
+const showError = (message) => {
+    errorMessage.textContent = message;
+    errorMessage.classList.remove('hidden');
+    loader.classList.add('hidden');
+    mainContent.classList.add('hidden');
+};
+
+const renderWeather = async (fetchFn, errorText) => {
+    mainContent.classList.add('hidden');
+    errorMessage.classList.add('hidden');
+    loader.classList.remove('hidden');
+
+    const data = await fetchFn();
+
+    loader.classList.add('hidden');
+
+    if (data) {
+        updateUI(data);
+        mainContent.classList.remove('hidden');
+    } else {
+        showError(errorText || 'Stadt nicht gefunden oder Fehler beim Laden der Daten.');
+    }
+};
+
+const resolveLocationName = async (latitude, longitude) => {
+    try {
+        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${latitude}&longitude=${longitude}&count=1&language=de&format=json`);
+        if (!res.ok) return { name: null, country: null };
+        const data = await res.json();
+        if (!data.results?.length) return { name: null, country: null };
+        return { name: data.results[0].name, country: data.results[0].country };
+    } catch (e) {
+        console.warn('Reverse geocoding failed', e);
+        return { name: null, country: null };
+    }
+};
+
+const fetchWeatherDataForCoords = async ({ latitude, longitude, name, country }) => {
   try {
-    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=de&format=json`);
-    if (!geoRes.ok) return null;
-    const geoData = await geoRes.json();
-    if (!geoData.results?.length) return null;
-    
-    const { latitude, longitude, name, country } = geoData.results[0];
     const weatherRes = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,pressure_msl,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,precipitation_probability,weather_code,visibility,snowfall,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,precipitation_probability_max,snowfall_sum,uv_index_max&timezone=auto`
     );
@@ -310,14 +443,17 @@ const fetchWeatherData = async (city) => {
     if (currentHourIndex === -1) currentHourIndex = 0;
     
     const hourlyData = data.hourly.time.slice(currentHourIndex, currentHourIndex + 24).map((t, i) => {
-      const code = data.hourly.weather_code[currentHourIndex + i];
-      const temp = data.hourly.temperature_2m[currentHourIndex + i];
-      const precipProb = data.hourly.precipitation_probability[currentHourIndex + i];
+      const idx = currentHourIndex + i;
+      const code = data.hourly.weather_code[idx];
+      const temp = data.hourly.temperature_2m[idx];
+      const precipProb = data.hourly.precipitation_probability[idx];
+      const uvIndex = data.hourly.uv_index?.[idx];
       const safePrecipProb = Number.isFinite(precipProb) ? precipProb : 0;
       return {
         time: new Date(t).toLocaleTimeString('de-DE', { hour: '2-digit' }),
         temp: Math.round(temp),
         precip: safePrecipProb,
+        uvIndex: Number.isFinite(uvIndex) ? Math.round(uvIndex) : null,
         code: code,
         isSnow: isSnowCode(code) || (temp <= 1 && safePrecipProb > 0)
       };
@@ -355,9 +491,17 @@ const fetchWeatherData = async (city) => {
       };
     });
 
+    let locationName = name;
+    let locationCountry = country;
+    if (!locationName) {
+        const resolved = await resolveLocationName(latitude, longitude);
+        locationName = resolved.name || 'Dein Standort';
+        locationCountry = resolved.country || '';
+    }
+
     return {
-      city: name,
-      country: country,
+      city: locationName,
+      country: locationCountry || '',
       temp: Math.round(current.temperature_2m),
       tempMin: Math.round(daily.temperature_2m_min[0]),
       tempMax: Math.round(daily.temperature_2m_max[0]),
@@ -386,17 +530,36 @@ const fetchWeatherData = async (city) => {
   }
 };
 
+const fetchWeatherData = async (city) => {
+  try {
+    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=de&format=json`);
+    if (!geoRes.ok) return null;
+    const geoData = await geoRes.json();
+    if (!geoData.results?.length) return null;
+    
+    const { latitude, longitude, name, country } = geoData.results[0];
+    return fetchWeatherDataForCoords({ latitude, longitude, name, country });
+  } catch (e) {
+    console.error("Failed to fetch weather data:", e);
+    return null;
+  }
+};
+
 
 // --- UI Update Logic ---
 
 const updateUI = (weather) => {
-    locationEl.textContent = `${weather.city}, ${weather.country}`;
+    const locationCountry = weather.country ? `, ${weather.country}` : '';
+    locationEl.textContent = `${weather.city}${locationCountry}`;
     currentTempEl.textContent = `${weather.temp}°`;
     conditionLabelEl.textContent = getWeatherInfo(weather.conditionCode).label;
     tempMaxEl.textContent = `${weather.tempMax}°`;
     tempMinEl.textContent = `${weather.tempMin}°`;
     
     mainWeatherIconEl.innerHTML = createWeatherIcon(weather.conditionCode, weather.isDay, { width: 48, height: 48 });
+    if (heroWeatherIconEl) {
+        heroWeatherIconEl.innerHTML = createWeatherIcon(weather.conditionCode, weather.isDay, { width: 72, height: 72 });
+    }
 
     windSpeedEl.textContent = weather.windSpeed;
     humidityEl.textContent = weather.humidity;
@@ -414,6 +577,10 @@ const updateUI = (weather) => {
     sunriseTimeEl.textContent = weather.sunrise;
     sunsetTimeEl.textContent = weather.sunset;
     dayStatusEl.textContent = weather.isDay ? 'Der Tag ist aktiv. Genieße das Licht.' : 'Die Nacht ist hereingebrochen.';
+    
+    if (insightTextEl) {
+        insightTextEl.textContent = getInsightMessage(weather);
+    }
     
     // Update daily forecast
     forecastList.innerHTML = ''; // Clear old forecast
@@ -446,26 +613,101 @@ const updateUI = (weather) => {
     
     // Create the weather chart
     createWeatherChart(weather.hourly);
+    createPrecipChart(weather.hourly);
+    createUvChart(weather.hourly);
 };
 
 // --- Main Application Logic ---
 
 const loadWeather = async (city) => {
-    mainContent.classList.add('hidden');
-    loader.classList.remove('hidden');
-    errorMessage.classList.add('hidden');
-    
-    const data = await fetchWeatherData(city);
+    await renderWeather(() => fetchWeatherData(city), 'Stadt nicht gefunden oder Fehler beim Laden der Daten.');
+};
 
-    loader.classList.add('hidden');
-    
-    if (data) {
-        updateUI(data);
-        mainContent.classList.remove('hidden');
-    } else {
-        errorMessage.textContent = 'Stadt nicht gefunden oder Fehler beim Laden der Daten.';
-        errorMessage.classList.remove('hidden');
+const loadWeatherByCoords = async (latitude, longitude) => {
+    await renderWeather(() => fetchWeatherDataForCoords({ latitude, longitude }), 'Konnte Standortdaten nicht laden.');
+};
+
+// --- Featured Cities Board ---
+const featuredCities = ['Zürich', 'Bern', 'Berlin', 'London', 'Paris', 'New York'];
+
+const createCityTile = (cityName) => {
+    const tile = document.createElement('div');
+    tile.className = 'city-tile';
+    tile.dataset.city = cityName;
+    tile.innerHTML = `
+        <div class="city-info">
+            <div class="city-name">${cityName}</div>
+            <div class="city-meta">Lädt...</div>
+        </div>
+        <div class="city-icon"><i data-lucide="loader-2"></i></div>
+        <div class="city-temp">--°</div>
+    `;
+    return tile;
+};
+
+const updateCityTile = (tile, data, fallbackName) => {
+    const nameEl = tile.querySelector('.city-name');
+    const metaEl = tile.querySelector('.city-meta');
+    const tempEl = tile.querySelector('.city-temp');
+    const iconEl = tile.querySelector('.city-icon');
+
+    if (!data) {
+        nameEl.textContent = fallbackName;
+        metaEl.textContent = 'Nicht verfügbar';
+        tempEl.textContent = '--';
+        iconEl.innerHTML = '<i data-lucide="help-circle"></i>';
+        return;
     }
+
+    const locationCountry = data.country ? `, ${data.country}` : '';
+    nameEl.textContent = `${data.city}${locationCountry}`;
+    metaEl.textContent = getWeatherInfo(data.conditionCode).label;
+    tempEl.textContent = `${data.temp}°`;
+    iconEl.innerHTML = createWeatherIcon(data.conditionCode, data.isDay, { width: 28, height: 28 });
+};
+
+const loadFeaturedCities = async () => {
+    if (!citiesListEl) return;
+    citiesListEl.innerHTML = '';
+
+    const tiles = {};
+    featuredCities.forEach((city) => {
+        const tile = createCityTile(city);
+        citiesListEl.appendChild(tile);
+        tiles[city] = tile;
+    });
+    if (window.lucide?.createIcons) {
+        lucide.createIcons();
+    }
+
+    for (const city of featuredCities) {
+        const tile = tiles[city];
+        const data = await fetchWeatherData(city);
+        updateCityTile(tile, data, city);
+    }
+    if (window.lucide?.createIcons) {
+        lucide.createIcons();
+    }
+};
+
+// --- Daily Insight ---
+const getInsightMessage = (weather) => {
+    const parts = [];
+    if (Number.isFinite(weather.precipProb) && weather.precipProb >= 70) {
+        parts.push('Hohe Regenwahrscheinlichkeit – Regenjacke mitnehmen.');
+    } else if (Number.isFinite(weather.snowAmount) && weather.snowAmount > 0) {
+        parts.push('Schnee erwartet – warme Kleidung einplanen.');
+    }
+    if (Number.isFinite(weather.uvIndex) && weather.uvIndex >= 7) {
+        parts.push('UV-Index hoch – Sonnenschutz nicht vergessen.');
+    }
+    if (Number.isFinite(weather.windSpeed) && weather.windSpeed >= 30) {
+        parts.push('Starker Wind – Achtung bei Fahrrad oder Schirm.');
+    }
+    if (parts.length === 0) {
+        return 'Gute Bedingungen – einfach rausgehen und genießen.';
+    }
+    return parts.join(' ');
 };
 
 // --- Event Listeners & Initial Load ---
@@ -473,7 +715,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial call to render all icons from data-lucide attributes
     lucide.createIcons();
 
-    // Load initial weather
+    // Hide loader on first paint; show data after user search or location
+    loader.classList.add('hidden');
+    errorMessage.classList.add('hidden');
+
+    loadFeaturedCities();
     loadWeather('Zürich');
 });
 
@@ -484,3 +730,40 @@ searchForm.addEventListener('submit', (e) => {
         loadWeather(query);
     }
 });
+
+const setGeoButtonState = (isLoading) => {
+    if (!geoButton) return;
+    geoButton.disabled = isLoading;
+    const label = geoButton.querySelector('span');
+    if (label) label.textContent = isLoading ? 'Standort wird abgerufen...' : 'Mein Standort';
+};
+
+if (geoButton) {
+    geoButton.addEventListener('click', () => {
+        if (!navigator.geolocation) {
+            showError('Geolocation wird von deinem Browser nicht unterstützt.');
+            return;
+        }
+
+        setGeoButtonState(true);
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setGeoButtonState(false);
+                const { latitude, longitude } = position.coords;
+                loadWeatherByCoords(latitude, longitude);
+            },
+            (err) => {
+                setGeoButtonState(false);
+                let msg = 'Konnte Standort nicht abrufen.';
+                if (err.code === err.PERMISSION_DENIED) {
+                    msg = 'Zugriff auf Standort abgelehnt. Bitte Berechtigung im Browser erteilen.';
+                } else if (err.code === err.TIMEOUT) {
+                    msg = 'Standortabfrage hat zu lange gedauert.';
+                }
+                showError(msg);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    });
+}
