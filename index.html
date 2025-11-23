@@ -1,0 +1,207 @@
+calendar<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atmosphere Weather</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <div class="background-ambience">
+        <div class="bg-shape1"></div>
+        <div class="bg-shape2"></div>
+    </div>
+
+    <div class="container">
+        <!-- Navigation/Search Bar -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon-wrapper">
+                    <i data-lucide="cloud"></i>
+                </div>
+                <div>
+                    <h1>Atmosphere</h1>
+                    <p>Live Satellite Data</p>
+                </div>
+            </div>
+            <form id="search-form" class="search-form">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" id="search-input" placeholder="Stadt suchen..." value="Zürich">
+            </form>
+        </header>
+
+        <main id="main-content" class="hidden">
+            <!-- Main Weather Info -->
+            <div class="main-grid">
+                <div class="main-column-left">
+                    <div id="main-card" class="card glowing">
+                        <div class="location-badge">
+                            <i data-lucide="map-pin"></i>
+                            <span id="location">Zürich, CH</span>
+                        </div>
+                        <div class="temp-display">
+                            <span id="current-temp">--°</span>
+                            <div class="condition">
+                                <div id="main-weather-icon"></div>
+                                <span id="condition-label">--</span>
+                            </div>
+                        </div>
+                        <div class="temp-range">
+                            <div class="range-item">
+                                <span>Max</span>
+                                <div><i data-lucide="arrow-up-right" class="text-red"></i> <span id="temp-max">--°</span></div>
+                            </div>
+                             <div class="range-item">
+                                <span>Min</span>
+                                <div><i data-lucide="arrow-down-right" class="text-cyan"></i> <span id="temp-min">--°</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mini-stats-grid">
+                        <div class="mini-stat">
+                            <i data-lucide="wind"></i>
+                            <div>
+                                <span class="value"><span id="wind-speed">--</span> km/h</span>
+                                <span class="label">Wind</span>
+                            </div>
+                        </div>
+                        <div class="mini-stat">
+                            <i data-lucide="droplets"></i>
+                            <div>
+                                <span class="value"><span id="humidity">--</span> %</span>
+                                <span class="label">Luftfeuchte</span>
+                            </div>
+                        </div>
+                        <div class="mini-stat">
+                            <i data-lucide="umbrella"></i>
+                            <div>
+                                <span class="value"><span id="precip-prob-mini">--</span> %</span>
+                                <span class="label">Regen</span>
+                            </div>
+                        </div>
+                        <div class="mini-stat">
+                            <i data-lucide="activity"></i>
+                            <div>
+                                <span class="value"><span id="pressure">--</span> hPa</span>
+                                <span class="label">Luftdruck</span>
+                            </div>
+                        </div>
+                        <div class="mini-stat">
+                            <i data-lucide="thermometer"></i>
+                            <div>
+                                <span class="value"><span id="apparent-temp">--</span> °C</span>
+                                <span class="label">Gefühlt</span>
+                            </div>
+                        </div>
+                        <div class="mini-stat">
+                            <i data-lucide="cloud"></i>
+                            <div>
+                                <span class="value"><span id="cloud-cover">--</span> %</span>
+                                <span class="label">Bewölkung</span>
+                            </div>
+                        </div>
+                        <div class="mini-stat">
+                            <i data-lucide="wind"></i>
+                            <div>
+                                <span class="value"><span id="wind-gust">--</span> km/h</span>
+                                <span class="label">Böen</span>
+                            </div>
+                        </div>
+                        <div class="mini-stat">
+                            <i data-lucide="eye"></i>
+                            <div>
+                                <span class="value"><span id="visibility">--</span> km</span>
+                                <span class="label">Sichtweite</span>
+                            </div>
+                        </div>
+                        <div class="mini-stat">
+                            <i data-lucide="sun-medium"></i>
+                            <div>
+                                <span class="value"><span id="uv-index">--</span></span>
+                                <span class="label">UV Index</span>
+                            </div>
+                        </div>
+                        <div class="mini-stat">
+                            <i data-lucide="snowflake"></i>
+                            <div>
+                                <span class="value"><span id="snow-amount">--</span> mm</span>
+                                <span class="label">Schnee (24h)</span>
+                            </div>
+                        </div>
+                        <div class="mini-stat">
+                            <i data-lucide="gauge"></i>
+                            <div>
+                                <span class="value"><span id="aqi-eu">--</span></span>
+                                <span class="label">Luftqualität</span>
+                            </div>
+                        </div>
+                        <div class="mini-stat">
+                            <i data-lucide="asterisk"></i>
+                            <div>
+                                <span class="value"><span id="pm25">--</span> µg/m³</span>
+                                <span class="label">PM2.5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts and Forecasts -->
+                <div class="main-column-right">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i data-lucide="activity"></i> Temperaturverlauf & Niederschlag</div>
+                            <div class="chart-legend">
+                                <span><span class="dot temp"></span> Temp</span>
+                                <span><span class="dot rain"></span> Regen</span>
+                            </div>
+                        </div>
+                        <div id="weather-chart-container"></div>
+                    </div>
+                    <div class="details-grid">
+                        <div class="card">
+                             <div class="card-header">
+                                <div class="card-title"><i data-lucide="calendar"></i> 7-Tage Trend</div>
+                            </div>
+                            <div id="forecast-list" class="forecast-list">
+                                <!-- Daily forecast items will be injected here -->
+                            </div>
+                        </div>
+                        <div class="card daylight-card">
+                             <div class="card-header">
+                                <div class="card-title"><i data-lucide="sun"></i> Tageslicht</div>
+                            </div>
+                            <div class="astro-card">
+                                 <div class="astro-item">
+                                    <div class="astro-icon sun"><i data-lucide="sunrise"></i></div>
+                                    <span id="sunrise-time">--:--</span>
+                                    <span>Aufgang</span>
+                                 </div>
+                                 <div class="astro-divider"></div>
+                                 <div class="astro-item">
+                                     <div class="astro-icon moon"><i data-lucide="sunset"></i></div>
+                                     <span id="sunset-time">--:--</span>
+                                     <span>Untergang</span>
+                                 </div>
+                            </div>
+                             <div id="day-status" class="day-status">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Loading Spinner -->
+        <div id="loader" class="loader-container">
+            <i data-lucide="loader-2" class="loader-icon"></i>
+            <p>Lade Umweltdaten...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="error-message hidden"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
